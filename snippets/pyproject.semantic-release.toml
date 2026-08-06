@@ -5,3 +5,6 @@
 [tool.semantic_release]
 version_toml = ["pyproject.toml:project.version"]
 build_command = ""
+# psr v10 defaults to disallowing 0.x versions (jumps straight to 1.0.0
+# on first release). Set true to allow starting/staying below 1.0.0.
+allow_zero_version = true
