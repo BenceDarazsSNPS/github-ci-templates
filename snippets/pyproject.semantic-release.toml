@@ -1,0 +1,7 @@
+# Copy into the consuming repo's pyproject.toml.
+# Not centrally reusable (static config, not executable logic), so this file
+# just keeps a canonical copy to paste from.
+
+[tool.semantic_release]
+version_toml = ["pyproject.toml:project.version"]
+build_command = ""
