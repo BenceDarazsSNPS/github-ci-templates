@@ -8,16 +8,6 @@ on:
         required: false
         type: string
         default: ""
-      python-semantic-release-version:
-        description: "Version of the python-semantic-release/python-semantic-release action to use"
-        required: false
-        type: string
-        default: "v10.6.1"
-      checkout-version:
-        description: "Version of the actions/checkout action to use"
-        required: false
-        type: string
-        default: "v7"
 
 jobs:
   release:
@@ -25,12 +15,12 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@${{ inputs.checkout-version }}
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Python Semantic Release
-        uses: python-semantic-release/python-semantic-release@${{ inputs.python-semantic-release-version }}
+        uses: python-semantic-release/python-semantic-release@v10.6.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           force: ${{ inputs.force }}

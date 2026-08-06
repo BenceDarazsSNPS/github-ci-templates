@@ -39,10 +39,6 @@ jobs:
       force: ${{ github.event.inputs.force != 'auto' && github.event.inputs.force || '' }}
 ```
 
-Optional inputs: `python-semantic-release-version` (default `v10.6.1`),
-`checkout-version` (default `v7`) — pass these under `with:` to pin
-different versions in a specific repo.
-
 Pin to a tag (`@v1`) rather than `@main` so this repo can change without
 silently breaking every consumer; bump the tag consumers use when you
 intentionally want them to pick up a change.
