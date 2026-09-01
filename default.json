@@ -2,7 +2,15 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
   "dependencyDashboardApproval": false,
+  "automergeStrategy": "squash",
+  "platformAutomerge": false,
   "packageRules": [
+    {
+      "matchDepTypes": ["tool.uv.sources"],
+      "automerge": true,
+      "automergeType": "pr",
+      "commitMessageTopic": "{{{depName}}}"
+    },
     {
       "matchDatasources": ["git-tags", "git-refs"],
       "automerge": true,
