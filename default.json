@@ -2,20 +2,9 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
   "dependencyDashboardApproval": false,
-  "customManagers": [
-    {
-      "customType": "regex",
-      "managerFilePatterns": ["/^pyproject\\.toml$/"],
-      "matchStrings": [
-        "git = \"(?<depName>https://github\\.com/[^\"]+)\\.git\", tag = \"(?<currentValue>[^\"]+)\""
-      ],
-      "datasourceTemplate": "git-tags",
-      "packageNameTemplate": "{{{depName}}}"
-    }
-  ],
   "packageRules": [
     {
-      "matchDatasources": ["git-tags"],
+      "matchDatasources": ["git-tags", "git-refs"],
       "automerge": true,
       "automergeType": "pr",
       "commitMessageTopic": "{{{depName}}}"
