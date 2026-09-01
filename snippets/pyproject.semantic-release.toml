@@ -7,4 +7,15 @@ version_toml = ["pyproject.toml:project.version"]
 build_command = ""
 # psr v10 defaults to disallowing 0.x versions (jumps straight to 1.0.0
 # on first release). Set true to allow starting/staying below 1.0.0.
+# Drop this line in a repo that is already past 1.0.0.
 allow_zero_version = true
+
+[tool.semantic_release.commit_parser_options]
+allowed_tags = ["build", "chore", "ci", "docs", "feat", "fix", "perf", "refactor", "style", "test"]
+minor_tags = ["feat"]
+# Without this, psr's defaults release only on feat/fix/breaking, and every
+# other merged PR updates main without cutting a version, tag, or Release --
+# including the "chore(deps):" commits Renovate automerges (see default.json).
+# Listing every recognized type as at least a patch means any merged PR always
+# produces a release.
+patch_tags = ["fix", "perf", "refactor", "chore", "docs", "style", "test", "build", "ci"]

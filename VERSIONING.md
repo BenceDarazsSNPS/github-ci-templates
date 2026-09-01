@@ -43,14 +43,26 @@ This is the part that trips people up: **the version bump is driven by
 commit message prefixes** (a convention called
 [Conventional Commits](https://www.conventionalcommits.org/)):
 
-- `fix: ...` → patch bump (1.0.0 → 1.0.1)
-- `feat: ...` → minor bump (1.0.0 → 1.1.0)
 - `feat!: ...` or a `BREAKING CHANGE:` footer → major bump (1.0.0 → 2.0.0)
-- `chore:`, `docs:`, `refactor:`, etc. → no release at all
+- `feat: ...` → minor bump (1.0.0 → 1.1.0)
+- `fix:`, `chore:`, `docs:`, `refactor:`, `ci:`, etc. → patch bump
+  (1.0.0 → 1.0.1)
+- an unrecognized prefix, or none at all → no release
 
-So: no commits, or only `chore`/`docs` commits since the last release →
-nothing happens, no new tag. Commits with `feat`/`fix` prefixes will
-trigger a new version.
+Grouping `chore`/`docs`/`refactor` into patch bumps is a deliberate
+departure from `python-semantic-release`'s defaults, which release only
+on `feat`/`fix`/breaking. It comes from the `commit_parser_options` block in
+[`snippets/pyproject.semantic-release.toml`](snippets/pyproject.semantic-release.toml),
+and it means **any merged PR with a recognized prefix produces a release**.
+
+Why: without it, a `chore:` or `refactor:` PR lands on `main` and silently
+produces no tag, so the code on `main` and the newest release drift apart.
+That bites hardest with the dependency bumps Renovate automerges — they are
+`chore(deps):` commits, and a repo whose release artifacts are attached to
+"the latest release" would keep building from a stale tag.
+
+So: no commits, or only unprefixed ones since the last release → nothing
+happens, no new tag. Anything else produces a version.
 
 ## The 0.x version gotcha
 

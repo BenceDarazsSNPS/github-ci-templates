@@ -43,10 +43,15 @@ Once squash-only merging is set up, contributors should know:
 - **Commit however you like on your feature branch.** None of it
   reaches `main` as-is, so prefixes/history there don't matter.
 - **The PR title is what matters.** Write it as a Conventional Commit:
-  - `fix: ...` → patch release
-  - `feat: ...` → minor release
   - `feat!: ...` or a `BREAKING CHANGE:` footer → major release
-  - `chore: ...`, `docs: ...`, `refactor: ...`, etc. → no release
+  - `feat: ...` → minor release
+  - `fix: ...`, `chore: ...`, `docs: ...`, `refactor: ...`, etc. →
+    patch release
+  - an unrecognized prefix, or none → no release
+
+  Every recognized prefix releases something (see the
+  [snippet](snippets/pyproject.semantic-release.toml)), so pick the one
+  that describes the change rather than trying to avoid a version bump.
 - **Double-check the squash commit message before confirming the
   merge.** GitHub pre-fills it from the PR title, but it's editable at
   merge time in the "Squash and merge" box. Whatever that final message
