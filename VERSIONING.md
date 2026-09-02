@@ -25,6 +25,7 @@ a Git tag + GitHub Release — all without a human manually deciding
 | File | Purpose |
 |---|---|
 | **`.github/workflows/semantic-release.yml`** | The actual release logic, written once and shared. It checks out the consumer repo, runs the `python-semantic-release` tool, which: reads commit messages since the last release, decides the version bump, updates `pyproject.toml`, creates a git tag, and publishes a GitHub Release. |
+| **`.github/workflows/sync-uv-git-sources.yml`** | The other half of the internal dependency chain. Points every `tool.uv.sources` git-tag pin at its upstream's newest tag, relocks, tests, and opens (or merges) the PR. Triggered by the `repository_dispatch` that `semantic-release.yml` sends after a release, so a downstream bump lands in seconds rather than whenever Renovate next polls. |
 | **`default.json`** | The shared Renovate preset — rules like "auto-merge dependency PRs." Consumer repos extend this from their own `renovate.json`. |
 | **`snippets/pyproject.semantic-release.toml`** | Not "live" config — just a copy/paste template showing consumer repos what to put in their own `pyproject.toml`. (Can't be referenced remotely because it's static TOML, not executable.) |
 | **`README.md`** | Step-by-step instructions for wiring a new repo up to this pattern. |
@@ -35,7 +36,8 @@ a Git tag + GitHub Release — all without a human manually deciding
 |---|---|
 | **`pyproject.toml`** | Python's standard project file. Holds the current version number (`project.version`) and the semantic-release settings (`[tool.semantic_release]`) — e.g. `allow_zero_version = true` lets versions start below 1.0.0 instead of jumping straight there. |
 | **`.github/workflows/release.yml`** | The trigger. Runs on every push to `main` (or manually via "Run workflow"). It doesn't contain any release *logic* itself — it just calls out to this repo's reusable workflow, pinned to a tag like `@v1`. |
-| **`renovate.json`** | Config for Renovate (a dependency-update bot). Points at this repo's shared preset so the consumer automatically gets dependency-update rules without maintaining its own. |
+| **`renovate.json`** | Config for Renovate (a dependency-update bot). Points at this repo's shared preset so the consumer automatically gets dependency-update rules without maintaining its own. Repos in an internal dependency chain also disable Renovate for `tool.uv.sources` there, because `sync-deps.yml` owns those. |
+| **`.github/workflows/sync-deps.yml`** | Only for repos that depend on another of your repos. A few lines calling the reusable sync workflow above. |
 
 ## How a release actually gets decided
 

@@ -8,19 +8,88 @@ on:
         required: false
         type: string
         default: ""
+      dependents:
+        description: >-
+          Repos ("owner/repo", one per line or comma separated) that depend on
+          this one via tool.uv.sources. After a release actually happens each
+          one gets a repository_dispatch, so its dependency-sync run starts
+          within seconds instead of waiting for the next Renovate poll.
+        required: false
+        type: string
+        default: ""
+    outputs:
+      released:
+        description: "true when this run published a new version"
+        value: ${{ jobs.release.outputs.released }}
+      version:
+        description: "The version that was released (empty when nothing was released)"
+        value: ${{ jobs.release.outputs.version }}
+      tag:
+        description: "The tag that was released (empty when nothing was released)"
+        value: ${{ jobs.release.outputs.tag }}
+    secrets:
+      DEPS_PAT:
+        description: >-
+          Token with contents:write on every repo listed in `dependents`.
+          Only needed when `dependents` is non-empty.
+        required: false
 
 jobs:
   release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    outputs:
+      released: ${{ steps.psr.outputs.released }}
+      version: ${{ steps.psr.outputs.version }}
+      tag: ${{ steps.psr.outputs.tag }}
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Python Semantic Release
-        uses: python-semantic-release/python-semantic-release@v10.6.1
+        id: psr
+        uses: python-semantic-release/python-semantic-release@v10.6.2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           force: ${{ inputs.force }}
+
+  notify-dependents:
+    needs: release
+    if: needs.release.outputs.released == 'true' && inputs.dependents != ''
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch upstream-release to each dependent
+        env:
+          GH_TOKEN: ${{ secrets.DEPS_PAT }}
+          DEPENDENTS: ${{ inputs.dependents }}
+          TAG: ${{ needs.release.outputs.tag }}
+          VERSION: ${{ needs.release.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${GH_TOKEN:-}" ]; then
+            echo "::error::'dependents' is set but the DEPS_PAT secret is empty. Add a token with contents:write on the dependent repos and pass 'secrets: inherit' from the caller."
+            exit 1
+          fi
+
+          # Accept either newlines or commas as separators.
+          repos=$(printf '%s' "$DEPENDENTS" | tr ',' '\n' | tr -d ' ' | sed '/^$/d')
+
+          failed=0
+          while read -r repo; do
+            echo "Dispatching upstream-release ($GITHUB_REPOSITORY -> $TAG) to $repo"
+            if ! gh api "repos/$repo/dispatches" \
+                  -f event_type=upstream-release \
+                  -f "client_payload[repo]=$GITHUB_REPOSITORY" \
+                  -f "client_payload[tag]=$TAG" \
+                  -f "client_payload[version]=$VERSION"; then
+              echo "::error::Failed to dispatch to $repo"
+              failed=1
+            fi
+          done <<< "$repos"
+
+          # A failed dispatch has to be loud: the whole point of this job is
+          # that the dependent does not sit waiting for a scheduled run.
+          exit "$failed"
